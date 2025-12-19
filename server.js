@@ -54,6 +54,10 @@ mongoose
 
 // start server
 const PORT = process.env.PORT || 4000;
+app.get("/", (req, res) => {
+  res.send("Backend is running 🚀");
+});
+
 
 server.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);

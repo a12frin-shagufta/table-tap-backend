@@ -1,4 +1,5 @@
 import MenuItem from "../models/MenuItem.js";
+import cloudinary from "../config/cloudinary.js";
 
 /* ======================
    ADD MENU ITEM
@@ -11,18 +12,28 @@ export const addMenuItem = async (req, res) => {
       return res.status(400).json({ message: "Image required" });
     }
 
+    // ⬆️ upload to cloudinary
+    const base64 = req.file.buffer.toString("base64");
+    const dataUri = `data:${req.file.mimetype};base64,${base64}`;
+
+    const uploadResult = await cloudinary.uploader.upload(dataUri, {
+      folder: "menu",
+    });
+
     const menuItem = await MenuItem.create({
       name: name.trim(),
       category: category.trim().toLowerCase(),
-      image: `/uploads/menu/${req.file.filename}`,
+      image: uploadResult.secure_url, // ✅ CLOUDINARY URL
       variants: JSON.parse(variants),
     });
 
     res.json({ success: true, menuItem });
   } catch (err) {
+    console.error("ADD MENU ERROR:", err);
     res.status(500).json({ message: err.message });
   }
 };
+
 
 /* ======================
    GET MENU
@@ -59,9 +70,17 @@ export const updateMenuItem = async (req, res) => {
       variants: JSON.parse(variants),
     };
 
-    if (req.file) {
-      update.image = `/uploads/menu/${req.file.filename}`;
-    }
+ if (req.file) {
+  const base64 = req.file.buffer.toString("base64");
+  const dataUri = `data:${req.file.mimetype};base64,${base64}`;
+
+  const uploadResult = await cloudinary.uploader.upload(dataUri, {
+    folder: "menu",
+  });
+
+  update.image = uploadResult.secure_url;
+}
+
 
     console.log("🛠️ UPDATE OBJECT:", update);
 
